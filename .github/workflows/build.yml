@@ -5,17 +5,25 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Setup ESP-IDF
-        uses: espressif/setup-espressif-idf@v1
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
-          esp-idf-version: v4.4.7
-          target: esp32
-      - name: Build Firmware
-        run: |
-          idf.py fullclean
-          idf.py build
-      - name: Upload firmware
+          submodules: recursive
+
+      # 乐鑫官方有效Action，替代失效的setup-espressif-idf
+      - name: Setup & Build ESP-IDF
+        uses: espressif/esp-idf-ci-action@v1
+        with:
+          esp_idf_version: v5.4.1  # 可改为v4.4.7 / latest
+          target: esp32             # WROOM-UE芯片固定esp32
+          path: .                   # 工程根目录，有sdkconfig.defaults
+
+      # 打包固件下载
+      - name: Upload firmware bin
         uses: actions/upload-artifact@v4
         with:
-          path: build/*.bin
+          name: esp32-ue-firmware
+          path: |
+            build/*.bin
+            build/bootloader/bootloader.bin
+            build/partition_table/partition-table.bin
