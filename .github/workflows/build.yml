@@ -1,28 +1,31 @@
 name: Build ESP32 Classic BT Firmware
 on: [push, pull_request]
+# 全局开启Node24强制兼容（双重保险）
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5  # 升级v5，原生支持Node24
         with:
           submodules: recursive
 
-      # 乐鑫官方有效Action，替代失效的setup-espressif-idf
-      - name: Setup & Build ESP-IDF
+      # 乐鑫官方CI Action，无Node版本冲突
+      - name: Build ESP-IDF firmware
         uses: espressif/esp-idf-ci-action@v1
         with:
-          esp_idf_version: v5.4.1  # 可改为v4.4.7 / latest
-          target: esp32             # WROOM-UE芯片固定esp32
-          path: .                   # 工程根目录，有sdkconfig.defaults
+          esp_idf_version: v4.4.7
+          target: esp32
+          path: .
 
-      # 打包固件下载
+      # 上传固件，升级artifact到v7
       - name: Upload firmware bin
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: esp32-ue-firmware
+          name: esp32-wroom-ue-bt-firmware
           path: |
             build/*.bin
             build/bootloader/bootloader.bin
