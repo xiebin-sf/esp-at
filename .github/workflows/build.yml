@@ -1,0 +1,21 @@
+name: Build ESP32 Classic BT Firmware
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup ESP-IDF
+        uses: espressif/setup-espressif-idf@v1
+        with:
+          esp-idf-version: v4.4.7
+          target: esp32
+      - name: Build Firmware
+        run: |
+          idf.py fullclean
+          idf.py build
+      - name: Upload firmware
+        uses: actions/upload-artifact@v4
+        with:
+          path: build/*.bin
