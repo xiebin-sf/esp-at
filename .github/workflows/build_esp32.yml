@@ -1,0 +1,39 @@
+name: Build ESP32 Classic Bluetooth
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  # 网页手动触发编译
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v4
+
+      - name: 安装ESP-IDF环境
+        uses: espressif/setup-espressif-idf@v7
+        with:
+          esp-idf-version: "v5.1.4" # 稳定版，兼容经典蓝牙
+          target: esp32
+          export-paths: true
+
+      - name: 生成sdkconfig并开启经典蓝牙
+        run: |
+          idf.py reconfigure
+          # 强制开启经典蓝牙，防止defaults失效
+          idf.py menuconfig -C -D CONFIG_BT_CLASSIC_ENABLED=y
+          idf.py menuconfig -C -D CONFIG_BTDM_CONTROLLER_MODE_BTDM=y
+          idf.py menuconfig -C -D CONFIG_BT_SPP_ENABLED=y
+
+      - name: 编译固件
+        run: idf.py build
+
+      - name: 上传编译产物（网页下载bin）
+        uses: actions/upload-artifact@v4
+        with:
+          name: esp32-classic-bluetooth-firmware
+          path: build/*.bin
